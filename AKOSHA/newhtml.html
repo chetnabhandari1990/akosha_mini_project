@@ -1,0 +1,238 @@
+<html>
+<body>
+<script src="http://code.jquery.com/jquery.js"></script>
+<div id="fb-root"></div>
+<script >
+
+     var x = location.search;
+	 var partsOfStr = x.split('=');
+	 var user_id=partsOfStr[1];
+	 var latest_post_id;
+     var str1join;
+	 var p_accessToken;
+	 var p_pageid;
+     var postidjoin;
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '471140439686175', // Set YOUR APP ID
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });
+ 
+    FB.Event.subscribe('auth.authResponseChange', function(response) 
+    {
+     if (response.status === 'connected') 
+    {
+        document.getElementById("message").innerHTML +=  "<br>Connected to Facebook";
+        //SUCCESS
+ 
+    }    
+    else if (response.status === 'not_authorized') 
+    {
+        document.getElementById("message").innerHTML +=  "<br>Failed to Connect";
+ 
+        //FAILED
+    } else 
+    {
+        document.getElementById("message").innerHTML +=  "<br>Logged Out";
+ 
+        //UNKNOWN ERROR
+    }
+    }); 
+ 
+    };
+ 
+    function Login()
+    {
+ 
+        FB.login(function(response) {
+           if (response.authResponse) 
+           {
+                getUserInfo();
+            } else 
+            {
+             console.log('User cancelled login or did not fully authorize.');
+            }
+         },{scope: 'email,publish_actions,user_photos,user_videos,publish_stream,manage_pages'});
+ 
+    }
+ 
+  function getUserInfo() {
+        FB.api('/me', function(response) {
+ 
+      var str="<b>Name</b> : "+response.name+"<br>";
+          str +="<b>Link: </b>"+response.link+"<br>";
+          str +="<b>Username:</b> "+response.username+"<br>";
+          str +="<b>id: </b>"+response.id+"<br>";
+          str +="<b>Email:</b> "+response.email+"<br>";
+          str +="<input type='button' value='Get Photo' onclick='getPhoto();'/>";
+		  str +="<input type='button' value='Get Page' onclick='getPage();'/>";
+          str +="<input type='button' value='Get Feeds' onclick='getfeeds();'/>";
+          str +="<input type='button' value='Logout' onclick='Logout();'/>";
+		  str +="<input type='button' value='chetnacheck' onclick='sendevery();'/>";
+		  str +="<input type='button' value='Submit' onclick='a();'/>";
+		//	str+=userid;
+          document.getElementById("status").innerHTML=str;
+ 
+    });
+    }
+	function sendevery()
+	{
+	 $.get('get_top_post.php/?user_id='+user_id ,function() {
+       
+        })
+        .done(function(data) {
+           console.log(data); 
+        
+			console.log("successfully sent");
+			latest_post_id=Number(data);
+			console.log(latest_post_id);
+        });
+	
+	
+}
+	function a(){
+	    sendtodb(str1join,postidjoin);
+		
+    }
+	
+	  function sendtodb(str1join,postidjoin,createdtimejoin) {
+     
+        $.get('data.php/?post='+str1join+'&id='+postidjoin+'&created_time='+creationtimejoin+'&user_id='+user_id ,function() {
+        
+        })
+        .done(function(data) {
+			console.log("successfully sent");
+        });
+    }
+	
+	
+	function fetch_posts() {
+     
+        $.get('fetch_posts.php/?user_id='+user_id ,function() {
+        
+        })
+        .done(function(data) {
+		var str1;
+		var jsonData=jQuery.parseJSON(data);
+		for (var i in jsonData){
+                  
+			  console.log(jsonData[i]);
+			  str1+="<br>";
+			  str1+="<button id='"+jsonData[i].post_id_full+"' value='Reply' onclick='getcomments(this);'/>";
+			  str1+="<br>";
+		      document.getElementById("posts").innerHTML=str1;
+        }
+		}
+		);
+    }
+	
+	
+	
+    function getPage()
+    {FB.login(function(response){ 
+FB.api('/me/accounts', function(response){ 
+   
+   console.log(response);
+   p_accessToken = response.data[0].access_token; 
+   p_pageid=response.data[0].id;
+   var p_name = response.data[0].name; 
+   alert('The pagename is:'
+           + p_name + 'Page access token is' 
+           + p_accessToken);});}
+   ,{scope:"manage_pages"});
+    }
+    function getfeeds()
+    {
+       //FB.api( "/1408301329440444/posts",function(response){
+      //  FB.api("/fql?q="+encodeURIComponent("SELECT post_id, created_time , app_data, type, actor_id, target_id, message FROM stream WHERE  source_id = //1408301329440444"),function(response){
+	//this works  //FB.api("/fql?q="+encodeURIComponent("SELECT post_id, created_time , app_data, type, actor_id, target_id, message FROM stream WHERE  source_id ="+p_pageid+" AND //actor_id!="+p_pageid),function(response){
+		//FB.api( "/fql?q="+encodeURIComponent("SELECT name FROM user WHERE uid=me()"),function(response) {
+	FB.api("/fql?q="+encodeURIComponent("SELECT post_id, created_time , app_data, type, actor_id, target_id, message FROM stream WHERE created_time>"+latest_post_id+"AND source_id ="+p_pageid+" AND actor_id!="+p_pageid ),function(response)	{
+		console.log(response);
+        
+          var str1=[];
+		  var postid=[];
+		  var creationtime=[];
+       
+        for(i=0;i<response.data.length;i++)
+        {str1[i]=response.data[i].message;
+
+		postid[i]=response.data[i].post_id;
+		creationtime[i]=response.data[i].created_time;
+               
+        }
+     str1join=str1.join();
+	 postidjoin=postid.join();
+	 creationtimejoin=creationtime.join();
+	 console.log(str1join);
+	 console.log(postidjoin);
+	 console.log(creationtimejoin);
+	 fetch_posts();
+       });
+    }
+      
+	  
+     
+    function getcomments(idbutton)
+	{
+	var id=idbutton.id;
+	
+FB.api('/'+id+'/comments', 'POST', { message:"Your comment text",access_token: p_accessToken },
+       function(response)
+       {
+            if (response && !response.error && response.id)
+            {
+                 alert('New comment id = '+response.id);
+            }
+       });	
+	
+	}
+    
+    function getPhoto()
+  
+    {
+      FB.api('/me/picture?type=normal', function(response) {
+ 
+          var str="<br/><b>Pic</b> : <img src='"+response.data.url+"'/>";
+          document.getElementById("status").innerHTML+=str;
+ 
+    });
+ 
+    }
+    function Logout()
+    {
+        FB.logout(function(){document.location.reload();});
+    }
+ 
+  // Load the SDK asynchronously
+  (function(d){
+     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement('script'); js.id = id; js.async = true;
+     js.src = "//connect.facebook.net/en_US/all.js";
+     ref.parentNode.insertBefore(js, ref);
+   }(document));
+ 
+</script>
+<div align="center">
+ 
+<div id="status">
+ 
+<img src="http://hayageek.com/examples/oauth/facebook/oauth-javascript/LoginWithFacebook.png" style="cursor:pointer;" onclick="Login()"/>
+</div>
+
+ 
+<br/><br/><br/><br/><br/>
+<div id="posts">
+
+</div>
+ 
+<div id="message">
+Logs:<br/>
+</div>
+ 
+</div>
+</body>
+</html>
