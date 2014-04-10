@@ -36,7 +36,7 @@
       xfbml      : true  // parse XFBML
     });
  
-    FB.Event.subscribe('auth.authResponseChange', function(response) 
+   /* FB.Event.subscribe('auth.authResponseChange', function(response) 
     {
      if (response.status === 'connected') 
     {
@@ -55,7 +55,8 @@
  
         //UNKNOWN ERROR
     }
-    }); 
+    }
+	); */ 
  
     };
  
@@ -77,20 +78,23 @@
   function getUserInfo() {
         FB.api('/me', function(response) {
  
-      var str="<b>Name</b> : "+response.name+"<br>";
-          str +="<b>Link: </b>"+response.link+"<br>";
+      var str="<b>Welcome</b> : "+response.name+"<br>";
+          /*str +="<b>Link: </b>"+response.link+"<br>";
           str +="<b>Username:</b> "+response.username+"<br>";
           str +="<b>id: </b>"+response.id+"<br>";
-          str +="<b>Email:</b> "+response.email+"<br>";
+          str +="<b>Email:</b> "+response.email+"<br>"; */
           //str +="<input type='button' value='Get Photo' onclick='getPhoto();'/>";
-		  str+="<div class='row'>";
-		  str +="<input class='btn btn-md btn-primary col-md-1' type='button' value='Fetch Page' onclick='getPage();'/>";
-          str +="<input class='btn btn-md btn-success col-md-1' type='button' value='Fetch Posts' onclick='getfeeds();'/>";
-          str +="<input class='btn btn-md btn-danger col-md-1' type='button' value='Logout' onclick='Logout();'/>";
-		  str +="<input class='btn btn-md btn-warning col-md-1' type='button' value='Fetch Latest Post' onclick='sendevery();'/>";
-		  str +="<input class='btn btn-md btn-success col-md-1' type='button' value='Submit' onclick='sendtodb();'/>";
+		  str+="<div class='row btn-group' >";
+		  str +="<input class='btn btn-md btn-primary' type='button' value='Fetch Page' onclick='getPage();'/>";
+		 
+          str +="<input class='btn btn-md btn-primary ' type='button' value='Fetch Posts' onclick='getfeeds();'/>";
+		
+          str +="<input class='btn btn-md btn-primary ' type='button' value='Fetch Latest Post' onclick='sendevery();'/>";
+	
+		  str +="<input class='btn btn-md btn-primary ' type='button' value='Submit' onclick='sendtodb();'/>";
+		
+		  str +="<input class='btn btn-md btn-danger ' type='button' value='Logout' onclick='Logout();'/>";
 		  str+="</div>";
-		//	str+=userid;
           document.getElementById("status").innerHTML=str;
  
     });
@@ -133,17 +137,23 @@
 		
 		var jsonData=jQuery.parseJSON(data);
 		for (var i in jsonData){
+		
                   
 			  console.log(jsonData[i]);
-			  str1+=jsonData[i].message;
-			  str1+="<br>";
-			  str1+=jsonData[i].comment;
+			  if(jsonData[i].type == 'facebook') 
+			  str1+="<div class='alert alert-info row'>";
+			  else
+			  str1+="<div class='alert alert-danger row'>";
+			  str1+="<span class='col-md-1'><B>"+jsonData[i].message+"</B></span>";
+			//  str1+="<br>";
+			  str1+="<span class='col-md-2'><B>Last comment: </B> "+jsonData[i].comment+"</span>";
 			  str1+="<br>";
 			  if (jsonData[i].type == 'facebook') 
 			 { str1+="<input type='text' id="+jsonData[i].post_id_full+"_name><br>";
 			 str1+="<button class='btn btn-xs btn-primary' id='"+jsonData[i].post_id_full+"'name='"+jsonData[i].post_id+"' onclick='getcomments(this);'>";
 			  str1+="Reply</button>";
 			  }
+			  str1+="</div>";
 			  str1+="<br><br>";
 		     
 			 
@@ -165,20 +175,14 @@
 		for (var i in jsonData){
                   
 			  console.log(jsonData[i]);
-			  
-			  str1+="<span class='label label-success'>" +jsonData[i].message+"</span>";
+			  if(jsonData[i].type == 'facebook') 
+			  str1+="<div class='alert alert-info row'>";
+			  else
+			  str1+="<div class='alert alert-danger row'>";
+			  str1+="<span class='col-md-1'><B>"+jsonData[i].message+"</B></span>";
+			  str1+="<span class='col-md-2'><B>Last comment: </B> "+jsonData[i].comment+"</span>";
 			  str1+="<br>";
-			  str1+=jsonData[i].comment;
-			  str1+="<br>";
-			 /* if (jsonData[i].type == 'facebook') 
-			{ str1+="<input type='text' id="+jsonData[i].post_id_full+"_name><br>";
-			 str1+="<button id='"+jsonData[i].post_id_full+"'name='"+jsonData[i].post_id+"' onclick='getcomments(this);'>";
-			  str1+="Reply</button>";
-			  }
-			  
-			  str1+="<br><br>";
-			  */
-		     
+			  str1+="</div>";
 			 
         }
 		 document.getElementById("posts").innerHTML=str1;
@@ -304,9 +308,7 @@ FB.api('/me/accounts', function(response){
 
  </div>
  
-<div id="message">
-Logs:<br/>
-</div>
+
  
 </div>
 </body>
