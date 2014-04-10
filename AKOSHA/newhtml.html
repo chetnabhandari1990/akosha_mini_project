@@ -1,7 +1,21 @@
 <html>
+<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
 <body>
+
+<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+    <a class="navbar-brand" href="#">Akosha</a>
+    </div>
+</div><!-- /.container-fluid -->
+</nav>
+<br>
+<br>
+<br>
 <script src="http://code.jquery.com/jquery.js"></script>
 <div id="fb-root"></div>
+
 <script >
 
      var x = location.search;
@@ -13,6 +27,7 @@
 	 var p_accessToken;
 	 var p_pageid;
      var postidjoin;
+	 fetch_posts_prefblogin();
   window.fbAsyncInit = function() {
     FB.init({
       appId      : '471140439686175', // Set YOUR APP ID
@@ -67,12 +82,14 @@
           str +="<b>Username:</b> "+response.username+"<br>";
           str +="<b>id: </b>"+response.id+"<br>";
           str +="<b>Email:</b> "+response.email+"<br>";
-          str +="<input type='button' value='Get Photo' onclick='getPhoto();'/>";
-		  str +="<input type='button' value='Get Page' onclick='getPage();'/>";
-          str +="<input type='button' value='Get Feeds' onclick='getfeeds();'/>";
-          str +="<input type='button' value='Logout' onclick='Logout();'/>";
-		  str +="<input type='button' value='chetnacheck' onclick='sendevery();'/>";
-		  str +="<input type='button' value='Submit' onclick='sendtodb();'/>";
+          //str +="<input type='button' value='Get Photo' onclick='getPhoto();'/>";
+		  str+="<div class='row'>";
+		  str +="<input class='btn btn-md btn-primary col-md-1' type='button' value='Fetch Page' onclick='getPage();'/>";
+          str +="<input class='btn btn-md btn-success col-md-1' type='button' value='Fetch Posts' onclick='getfeeds();'/>";
+          str +="<input class='btn btn-md btn-danger col-md-1' type='button' value='Logout' onclick='Logout();'/>";
+		  str +="<input class='btn btn-md btn-warning col-md-1' type='button' value='Fetch Latest Post' onclick='sendevery();'/>";
+		  str +="<input class='btn btn-md btn-success col-md-1' type='button' value='Submit' onclick='sendtodb();'/>";
+		  str+="</div>";
 		//	str+=userid;
           document.getElementById("status").innerHTML=str;
  
@@ -120,11 +137,47 @@
 			  console.log(jsonData[i]);
 			  str1+=jsonData[i].message;
 			  str1+="<br>";
+			  str1+=jsonData[i].comment;
+			  str1+="<br>";
 			  if (jsonData[i].type == 'facebook') 
-			 { str1+="<button id='"+jsonData[i].post_id_full+"' value='Reply' onclick='getcomments(this);'>";
+			 { str1+="<input type='text' id="+jsonData[i].post_id_full+"_name><br>";
+			 str1+="<button class='btn btn-xs btn-primary' id='"+jsonData[i].post_id_full+"'name='"+jsonData[i].post_id+"' onclick='getcomments(this);'>";
 			  str1+="Reply</button>";
 			  }
 			  str1+="<br><br>";
+		     
+			 
+        }
+		 document.getElementById("posts").innerHTML=str1;
+		}
+		);
+    }
+		
+	function fetch_posts_prefblogin() {
+  
+        $.get('fetch_posts.php/?user_id='+user_id ,function() {
+        
+        })
+        .done(function(data) {
+		   var str1="";
+		
+		var jsonData=jQuery.parseJSON(data);
+		for (var i in jsonData){
+                  
+			  console.log(jsonData[i]);
+			  
+			  str1+="<span class='label label-success'>" +jsonData[i].message+"</span>";
+			  str1+="<br>";
+			  str1+=jsonData[i].comment;
+			  str1+="<br>";
+			 /* if (jsonData[i].type == 'facebook') 
+			{ str1+="<input type='text' id="+jsonData[i].post_id_full+"_name><br>";
+			 str1+="<button id='"+jsonData[i].post_id_full+"'name='"+jsonData[i].post_id+"' onclick='getcomments(this);'>";
+			  str1+="Reply</button>";
+			  }
+			  
+			  str1+="<br><br>";
+			  */
 		     
 			 
         }
@@ -188,13 +241,24 @@ FB.api('/me/accounts', function(response){
     function getcomments(idbutton)
 	{
 	var id=idbutton.id;
+	var x=document.getElementById(id+'_name');
+	var names= idbutton.name;
+ console.log(names);
 	
-FB.api('/'+id+'/comments', 'POST', { message:"Your comment text",access_token: p_accessToken },
+	FB.api('/'+id+'/comments', 'POST', { message:x.value,access_token: p_accessToken },
        function(response)
        {
             if (response && !response.error && response.id)
             {
                  alert('New comment id = '+response.id);
+				  $.get('comment.php/?post='+x.value+'&id='+id+'&post_id='+names,function() {
+        
+        })
+        .done(function(data) {
+			console.log("successfully sent");
+        });
+				 
+				 
             }
        });	
 	
@@ -235,7 +299,10 @@ FB.api('/'+id+'/comments', 'POST', { message:"Your comment text",access_token: p
 
  
 <br/><br/><br/><br/><br/>
-<div id="posts"> </div>
+<div id="posts">
+
+
+ </div>
  
 <div id="message">
 Logs:<br/>
